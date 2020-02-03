@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<project name="Esed Pipeline Server" default="install" basedir="../">
+    <property name="zookeeper.file.name" value="apache-zookeeper-3.5.6-bin"/>
+    <property name="zookeeper.data.dir" value="${basedir}/data/zookeeper"/>
+
+    <property name="kafka.file.name" value="kafka_2.12-2.3.0"/>
+    <property name="kafka.logs.dir" value="${basedir}/data/kafka"/>
+    <property name="kafka.host.name" value="127.0.0.1"/>
+
+    <target name="clean">
+        <delete dir="${zookeeper.file.name}"/>
+        <delete dir="${kafka.file.name}"/>
+    </target>
+
+    <target name="install" depends="clean">
+        <untar src="installation/${zookeeper.file.name}.tar.gz" dest="." compression="gzip"/>
+
+        <echo message="============================== Install Zookeeper =============================="/>
+        <copy todir="${zookeeper.file.name}/conf" file="installation/zookeeper/zoo.cfg"/>
+        <replace file="${zookeeper.file.name}/conf/zoo.cfg" token="{{zookeeper.data.dir}}"
+                 value="${zookeeper.data.dir}"/>
+        <replace file="${zookeeper.file.name}/conf/zoo.cfg" token="\" value="/"/>
+
+        <echo message="============================== Install Kafka =============================="/>
+        <untar src="installation/${kafka.file.name}.tgz" dest="." compression="gzip"/>
+
+        <copy todir="${kafka.file.name}/config" file="installation/kafka/zookeeper.properties"/>
+        <replace file="${kafka.file.name}/config/zookeeper.properties" token="{{zookeeper.data.dir}}"
+                 value="${zookeeper.data.dir}"/>
+        <replace file="${kafka.file.name}/config/zookeeper.properties" token="\" value="/"/>
+
+        <copy todir="${kafka.file.name}/config" file="installation/kafka/server.properties"/>
+        <replace file="${kafka.file.name}/config/server.properties">
+            <replacefilter token="{{kafka.host.name}}" value="${kafka.host.name}"/>
+            <replacefilter token="{{kafka.logs.dir}}" value="${kafka.logs.dir}"/>
+            <replacefilter token="\" value="/"/>
+        </replace>
+    </target>
+
+    <target name="clean-data">
+        <delete dir="data"/>
+    </target>
+
+</project>
