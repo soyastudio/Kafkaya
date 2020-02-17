@@ -1,44 +1,55 @@
 <?xml version="1.0"?>
-<project name="Esed Pipeline Server" default="install" basedir="../">
-    <property name="zookeeper.file.name" value="apache-zookeeper-3.5.6-bin"/>
-    <property name="zookeeper.data.dir" value="${basedir}/data/zookeeper"/>
+<project name="Zookeeper Kafka Installation" default="install" basedir="./">
+    <property file="install.properties"/>
 
-    <property name="kafka.file.name" value="kafka_2.12-2.3.0"/>
-    <property name="kafka.logs.dir" value="${basedir}/data/kafka"/>
+    <property name="install.dest.dir" location="${install.dir}"/>
+    <property name="data.dest.dir" location="${install.dest.dir}/data"/>
+
+    <property name="zookeeper.install.dir" location="${install.dest.dir}/${zookeeper.file.name}"/>
+    <property name="zookeeper.data.dir" value="${data.dest.dir}/zookeeper"/>
+
+    <property name="kafka.install.dir" location="${install.dest.dir}/${kafka.file.name}"/>
+    <property name="kafka.logs.dir" value="${data.dest.dir}/kafka"/>
     <property name="kafka.host.name" value="127.0.0.1"/>
 
-    <target name="clean">
-        <delete dir="${zookeeper.file.name}"/>
-        <delete dir="${kafka.file.name}"/>
-    </target>
-
     <target name="install" depends="clean">
-        <untar src="installation/${zookeeper.file.name}.tar.gz" dest="." compression="gzip"/>
+        <untar src="../installation/download/${zookeeper.file.name}.tar.gz" dest="${install.dest.dir}" compression="gzip"/>
 
         <echo message="============================== Install Zookeeper =============================="/>
-        <copy todir="${zookeeper.file.name}/conf" file="installation/zookeeper/zoo.cfg"/>
-        <replace file="${zookeeper.file.name}/conf/zoo.cfg" token="{{zookeeper.data.dir}}"
+        <copy todir="${zookeeper.install.dir}/conf" file="zookeeper/zoo.cfg"/>
+        <replace file="${zookeeper.install.dir}/conf/zoo.cfg" token="{{zookeeper.data.dir}}"
                  value="${zookeeper.data.dir}"/>
-        <replace file="${zookeeper.file.name}/conf/zoo.cfg" token="\" value="/"/>
+        <replace file="${zookeeper.install.dir}/conf/zoo.cfg" token="\" value="/"/>
 
         <echo message="============================== Install Kafka =============================="/>
-        <untar src="installation/${kafka.file.name}.tgz" dest="." compression="gzip"/>
+        <untar src="../installation/download/${kafka.file.name}.tgz" dest="${install.dest.dir}" compression="gzip"/>
 
-        <copy todir="${kafka.file.name}/config" file="installation/kafka/zookeeper.properties"/>
-        <replace file="${kafka.file.name}/config/zookeeper.properties" token="{{zookeeper.data.dir}}"
+        <copy todir="${kafka.install.dir}/config" file="kafka/zookeeper.properties"/>
+        <replace file="${kafka.install.dir}/config/zookeeper.properties" token="{{zookeeper.data.dir}}"
                  value="${zookeeper.data.dir}"/>
-        <replace file="${kafka.file.name}/config/zookeeper.properties" token="\" value="/"/>
+        <replace file="${kafka.install.dir}/config/zookeeper.properties" token="\" value="/"/>
 
-        <copy todir="${kafka.file.name}/config" file="installation/kafka/server.properties"/>
-        <replace file="${kafka.file.name}/config/server.properties">
+        <copy todir="${kafka.install.dir}/config" file="kafka/server.properties"/>
+        <replace file="${kafka.install.dir}/config/server.properties">
             <replacefilter token="{{kafka.host.name}}" value="${kafka.host.name}"/>
             <replacefilter token="{{kafka.logs.dir}}" value="${kafka.logs.dir}"/>
             <replacefilter token="\" value="/"/>
         </replace>
     </target>
 
+    <target name="package">
+        <zip basedir="." file="../zookeeper-kafka-installation.zip"/>
+    </target>
+
+    <target name="clean-all" depends="clean, clean-data"/>
+
     <target name="clean-data">
-        <delete dir="data"/>
+        <delete dir="${data.dest.dir}"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${zookeeper.install.dir}"/>
+        <delete dir="${kafka.install.dir}"/>
     </target>
 
 </project>

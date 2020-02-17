@@ -1,7 +1,6 @@
 server:
   port: 9090
 
-
 spring:
   kafka:
     producer:

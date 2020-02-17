@@ -1,5 +1,6 @@
 package soya.framework.kafka.admin.configuration;
 
+import org.apache.kafka.streams.StreamsBuilder;
 import soya.framework.kafka.admin.resource.KafkaAdminResource;
 import soya.framework.kafka.admin.service.KafkaAdminService;
 import io.swagger.jaxrs.config.BeanConfig;
@@ -52,6 +53,7 @@ public class KafkaAdminConfiguration extends ResourceConfig {
         AdminClient adminClient = AdminClient.create(kafkaProperties.buildAdminProperties());
         KafkaProducer kafkaProducer = new KafkaProducer(kafkaProperties.buildProducerProperties());
         KafkaConsumer kafkaConsumer = new KafkaConsumer(kafkaProperties.buildConsumerProperties());
+
 
         return new KafkaAdminService(adminClient, kafkaProducer, kafkaConsumer);
     }
