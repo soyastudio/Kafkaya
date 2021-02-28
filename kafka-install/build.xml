@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<project name="Zookeeper Kafka Installation" default="install" basedir="./">
+    <property file="install.properties"/>
+
+    <property name="install.dest.dir" location="${install.dir}"/>
+    <property name="data.dest.dir" location="${install.dest.dir}/data"/>
+
+    <property name="zookeeper.install.dir" location="${install.dest.dir}/${zookeeper.install.dir.name}"/>
+    <property name="zookeeper.data.dir" value="${data.dest.dir}/zookeeper"/>
+
+    <property name="kafka.install.dir" location="${install.dest.dir}/${kafka.install.dir.name}"/>
+    <property name="kafka.logs.dir" value="${data.dest.dir}/kafka"/>
+    <property name="kafka.host.name" value="127.0.0.1"/>
+
+    <target name="install" depends="clean">
+
+        <echo message="============================== Install Zookeeper =============================="/>
+        <untar src="download/${zookeeper.file.name}" dest="${install.dest.dir}" compression="gzip"/>
+
+        <copy todir="${zookeeper.install.dir}/conf" file="zookeeper/zoo.cfg"/>
+        <replace file="${zookeeper.install.dir}/conf/zoo.cfg" token="{{zookeeper.data.dir}}"
+                 value="${zookeeper.data.dir}"/>
+        <replace file="${zookeeper.install.dir}/conf/zoo.cfg" token="\" value="/"/>
+
+        <echo message="============================== Install Kafka =============================="/>
+        <untar src="download/${kafka.file.name}" dest="${install.dest.dir}" compression="gzip"/>
+
+        <copy todir="${kafka.install.dir}/config" file="kafka/zookeeper.properties"/>
+        <replace file="${kafka.install.dir}/config/zookeeper.properties" token="{{zookeeper.data.dir}}"
+                 value="${zookeeper.data.dir}"/>
+        <replace file="${kafka.install.dir}/config/zookeeper.properties" token="\" value="/"/>
+
+        <copy todir="${kafka.install.dir}/config" file="kafka/server.properties"/>
+        <replace file="${kafka.install.dir}/config/server.properties">
+            <replacefilter token="{{kafka.host.name}}" value="${kafka.host.name}"/>
+            <replacefilter token="{{kafka.logs.dir}}" value="${kafka.logs.dir}"/>
+            <replacefilter token="\" value="/"/>
+        </replace>
+
+        <echo message="============================== Install Spark =============================="/>
+        <untar src="download/${spark.file.name}" dest="${install.dest.dir}" compression="gzip"/>
+
+        <echo message="============================== Install Hadoop =============================="/>
+        <mkdir dir="${install.dest.dir}/hadoop"/>
+        <mkdir dir="${install.dest.dir}/hadoop/bin"/>
+        <copy todir="${install.dest.dir}/hadoop/bin" file="download/winutils.exe" />
+
+        <echo message="============================== Create Readme =============================="/>
+        <copy todir="../" file="kafka-zookeeper-start.md"/>
+        <replace file="../kafka-zookeeper-start.md">
+            <replacefilter token="{{zookeeper.install.dir}}" value="${zookeeper.install.dir}"/>
+            <replacefilter token="{{kafka.install.dir}}" value="${kafka.install.dir}"/>
+            <replacefilter token="\" value="/"/>
+        </replace>
+    </target>
+
+    <target name="package">
+        <zip basedir="." file="../kafka-zookeeper-installation.zip"/>
+    </target>
+
+    <target name="clean-all" depends="clean, clean-data"/>
+
+    <target name="clean-data">
+        <delete dir="${data.dest.dir}"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${zookeeper.install.dir}"/>
+        <delete dir="${kafka.install.dir}"/>
+    </target>
+
+</project>
