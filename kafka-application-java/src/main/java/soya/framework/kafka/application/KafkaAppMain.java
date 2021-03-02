@@ -1,4 +1,4 @@
-package com.albertsons.edis.kafka.application;
+package soya.framework.kafka.application;
 
 public class KafkaAppMain {
     public static void main(String[] args) {

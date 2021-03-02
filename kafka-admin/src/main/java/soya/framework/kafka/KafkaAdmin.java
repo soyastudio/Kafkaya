@@ -1,4 +1,4 @@
-package com.albertsons.edis.kafka;
+package soya.framework.kafka;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

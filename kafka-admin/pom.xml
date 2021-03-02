@@ -86,7 +86,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.albertsons.edis.kafka.KafkaAdmin</mainClass>
+                            <mainClass>soya.framework.kafka.KafkaAdmin</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

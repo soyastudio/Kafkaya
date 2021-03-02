@@ -1,4 +1,4 @@
-package com.albertsons.edis.kafka.stream;
+package soya.framework.kafka.stream;
 
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;

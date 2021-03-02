@@ -82,7 +82,7 @@ java -jar kafkaya.jar -c TOPIC_NAME -p TOPIC_NAME -H ewogICJOYW1lIjogIkJvYiIsCiA
 
 ### Run Kafka Application
 ```
-java -jar kafkaya.jar -a application -f kafka-application-java.jar -s com.albertsons.edis.kafka.application.KafkaAppMain
+java -jar kafkaya.jar -a application -f kafka-application-java.jar -s KafkaAppMain
 
 ```
 # Business Object Related Commands

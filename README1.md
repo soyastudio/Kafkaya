@@ -82,7 +82,7 @@ java -jar kafka-admin-jar-with-dependencies.jar -c Outbound -p Inbound -m ewogIC
 
 ### Run Kafka Application
 ```
-java -jar kafkaya.jar -a application -f kafka-application-java.jar -s com.albertsons.edis.kafka.application.KafkaAppMain
+java -jar kafkaya.jar -a application -f kafka-application-java.jar -s KafkaAppMain
 
 
 ```
