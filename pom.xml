@@ -147,6 +147,7 @@
     <modules>
         <module>kafka-admin</module>
         <module>kafka-stream-java</module>
+        <module>kafka-application-java</module>
     </modules>
 
 </project>

@@ -1,30 +1,4 @@
-# Environment
-## Dev:
-
-```
-    ssh dgv012efa
-    
-    su - esd02ed
-    password: #Today@321!
-
-    cd /appl/esed/kafka/admin
-
-```
-
-## QA:
-
-```
-    ssh qgv012efb
-
-    su - esq03ed
-    password: #Today@321!
-
-    cd /appl/esed/kafka
-
-```
-
 # Global Commands
-Global commands do not set argument "b".
 
 ## Topics
 
@@ -80,11 +54,6 @@ java -jar kafkaya.jar -c TOPIC_NAME -p TOPIC_NAME -H ewogICJOYW1lIjogIkJvYiIsCiA
 
 ```
 
-### Run Kafka Application
-```
-java -jar kafkaya.jar -a application -f kafka-application-java.jar -s com.albertsons.edis.kafka.application.KafkaAppMain
-
-```
 # Business Object Related Commands
 
 All business object related commands need to set argument "b" to specify a workspace of the business object.
@@ -147,20 +116,4 @@ java -jar kafkaya.jar -b BO
 
 ```
 
-# Arguments:
 
-| Option       | LongOpt            | Has argument | Required     | Description  |
-| ------------ | ------------------ | ------------ | ------------ | ------------ |
-| a            | action             | True         | False        | Task to execute. |
-| b            | businessObject     | True         | False        | Business object. |
-| c            | consumerTopic      | True         | False        | Consumer Topic. |
-| f            | file               | True         | False        | File related to the action specified. |
-| H            | header             | True         | False        | Kafka message header. |
-| m            | msg                | True         | False        | Message for Kafka producer, base64 encode required. |
-| n            | count              | True         | False        | Number of message to print out. |
-| p            | producerTopic      | True         | False        | Producer Topic. |
-| Q            | Query              | False        | False        | Find All Topics. |
-| q            | query              | True         | False        | Query logic based on action specified. |
-| s            | className          | True         | False        | Task class to execute.  |
-| t            | taskMethod         | True         | False        | Method name of task class to execute.  |
-| x            | clean              | True         | False        | Do cleanup based on action specified.  |
