@@ -18,7 +18,7 @@
 
         <commons-beanutils-version>1.9.4</commons-beanutils-version>
 
-        <google.guava.version>27.0.1-jre</google.guava.version>
+        <google.guava.version>29.0-jre</google.guava.version>
         <google.guice.version>4.2.2</google.guice.version>
         <google.findbugs.version>3.0.0</google.findbugs.version>
         <reflections.version>0.9.11</reflections.version>
