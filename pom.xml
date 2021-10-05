@@ -145,7 +145,7 @@
     </dependencyManagement>
 
     <modules>
-        <module>kafka-admin</module>
+        <module>kafka-cli</module>
         <module>kafka-stream-java</module>
         <module>kafka-application-java</module>
     </modules>
