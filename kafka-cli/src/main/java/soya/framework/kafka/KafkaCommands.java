@@ -2,7 +2,10 @@ package soya.framework.kafka;
 
 import com.google.gson.*;
 import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
@@ -146,6 +149,13 @@ public class KafkaCommands {
                 .longOpt("query")
                 .hasArg(true)
                 .desc("Query.")
+                .required(false)
+                .build());
+
+        options.addOption(Option.builder("r")
+                .longOpt("decoder")
+                .hasArg(true)
+                .desc("Avro decoder, default is 'json' other value is 'binary'")
                 .required(false)
                 .build());
 
@@ -408,6 +418,10 @@ public class KafkaCommands {
                     @Opt(option = "m",
                             required = true,
                             desc = "Message to publish, in GZip and Base64 encoded format."),
+                    @Opt(option = "r",
+                            required = false,
+                            defaultValue = "json",
+                            desc = "Avro message decoder, values: 'json', 'binary"),
                     @Opt(option = "s",
                             desc = "Schema to parse the avro message if provided"),
                     @Opt(option = "t",
@@ -475,7 +489,7 @@ public class KafkaCommands {
         });
 
         while (results.isEmpty()) {
-            if(System.currentTimeMillis() - timestamp > timeout) {
+            if (System.currentTimeMillis() - timestamp > timeout) {
                 throw new RuntimeException("Process timeout over " + timeout + "ms");
             }
 
@@ -483,14 +497,14 @@ public class KafkaCommands {
         }
 
         ConsumerRecord<String, byte[]> rc = results.get(0);
-        if(cmd.hasOption("s")) {
+        if (cmd.hasOption("s")) {
             Schema schema = null;
             String sc = cmd.getOptionValue("s");
-            if(new File(sc).exists()) {
+            if (new File(sc).exists()) {
                 schema = new Schema.Parser().parse(new File(sc));
             }
 
-            if(schema == null) {
+            if (schema == null) {
                 try {
                     URL url = new URL(sc);
                     schema = new Schema.Parser().parse(url.openStream());
@@ -500,11 +514,11 @@ public class KafkaCommands {
                 }
             }
 
-            if(schema == null) {
+            if (schema == null) {
                 schema = new Schema.Parser().parse(decompress(sc));
             }
 
-            GenericRecord avro = read(rc.value(), schema);
+            GenericRecord avro = read(rc.value(), schema, cmd.getOptionValue("r"));
 
             return avro.toString();
 
@@ -580,6 +594,10 @@ public class KafkaCommands {
                     @Opt(option = "e",
                             defaultValue = "LOCAL",
                             desc = "Environment"),
+                    @Opt(option = "r",
+                            required = false,
+                            defaultValue = "json",
+                            desc = "Avro message decoder, values: 'json', 'binary"),
                     @Opt(option = "s",
                             desc = "Schema to parse the message if provided")
             },
@@ -652,7 +670,7 @@ public class KafkaCommands {
 
                 byte[] data = rc.value();
 
-                GenericRecord record = read(data, schema);
+                GenericRecord record = read(data, schema, cmd.getOptionValue("r"));
                 String json = record.toString();
 
                 JsonObject result = new JsonObject();
@@ -692,6 +710,111 @@ public class KafkaCommands {
                     @Opt(option = "e",
                             defaultValue = "LOCAL",
                             desc = "Environment"),
+                    @Opt(option = "f",
+                            required = true,
+                            desc = "Path to export file."),
+                    @Opt(option = "r",
+                            required = false,
+                            defaultValue = "json",
+                            desc = "Avro message decoder, values: 'json', 'binary"),
+                    @Opt(option = "s",
+                            required = true,
+                            desc = "Path to avro schema file.")
+            },
+            cases = {"-a read -c MY_TOPIC_NAME -f XXX.xxx"}
+    )
+    public static String read(CommandLine cmd) throws Exception {
+        String topicName = null;
+        if (cmd.hasOption("c")) {
+            topicName = cmd.getOptionValue("c");
+        }
+
+        Schema schema = null;
+        String avsc = cmd.getOptionValue("s");
+
+        try {
+            String decompressed = decompress(avsc);
+            schema = new Schema.Parser().parse(decompressed);
+
+        } catch (Exception e) {
+            // do nothing
+        }
+
+        if (schema == null) {
+            try {
+                URL url = new URL(avsc);
+                InputStream inputStream = url.openStream();
+                schema = new Schema.Parser().parse(inputStream);
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+
+        if (schema == null) {
+            try {
+                File file = new File(avsc);
+                schema = new Schema.Parser().parse(file);
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+
+        if (schema == null) {
+            throw new IllegalArgumentException("Cannot parse avro schema from 's', it should be a compressed string or url or file");
+        }
+
+        File file = new File(cmd.getOptionValue("f"));
+        if (file.exists()) {
+            file.getParentFile().mkdirs();
+            file.createNewFile();
+        }
+
+        KafkaConsumer<String, byte[]> kafkaConsumer = kafkaClientFactory(cmd).createKafkaConsumer();
+        List<String> topics = new ArrayList<>();
+        topics.add(topicName);
+
+        Collection<TopicPartition> partitions = null;
+        if (cmd.hasOption("p")) {
+            partitions = new ArrayList<>();
+            partitions.add(new TopicPartition(topicName, Integer.parseInt(cmd.getOptionValue("p"))));
+
+        } else {
+            List<PartitionInfo> partitionInfoSet = kafkaConsumer.partitionsFor(topicName);
+            partitions = partitionInfoSet.stream()
+                    .map(partitionInfo -> new TopicPartition(partitionInfo.topic(),
+                            partitionInfo.partition()))
+                    .collect(Collectors.toList());
+
+        }
+
+        ConsumerRecord<String, byte[]> rc = latest(kafkaConsumer, topicName, partitions);
+        if (rc != null) {
+            byte[] data = rc.value();
+            GenericRecord record = read(data, schema, cmd.getOptionValue("r"));
+            write((GenericData.Record) record, schema, file);
+
+        }
+
+        return "";
+    }
+
+    @Command(
+            desc = "Consume latest avro message from specified topic of specified environment and parse the avro record payload with specified avro schema.",
+            options = {
+                    @Opt(option = "a",
+                            required = true,
+                            defaultValue = "consume",
+                            desc = "Command name."),
+                    @Opt(option = "c",
+                            required = true,
+                            desc = "Topic name for consuming messages."),
+                    @Opt(option = "e",
+                            defaultValue = "LOCAL",
+                            desc = "Environment"),
+                    @Opt(option = "r",
+                            required = false,
+                            defaultValue = "json",
+                            desc = "Avro message decoder, values: 'json', 'binary"),
                     @Opt(option = "s",
                             required = true,
                             desc = "Path to avro schema file.")
@@ -762,7 +885,7 @@ public class KafkaCommands {
         if (rc != null) {
             byte[] data = rc.value();
 
-            GenericRecord record = read(data, schema);
+            GenericRecord record = read(data, schema, cmd.getOptionValue('r'));
             return record.toString();
 
         }
@@ -1168,11 +1291,36 @@ public class KafkaCommands {
         return records.isEmpty() ? null : records.get(0);
     }
 
-    protected static GenericRecord read(byte[] data, Schema schema) throws Exception {
+    protected static GenericRecord read(byte[] data, Schema schema, String decoderType) throws Exception {
+        ByteArrayInputStream input = new ByteArrayInputStream(data);
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>();
         datumReader.setSchema(schema);
-        Decoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+        Decoder decoder = null;
+
+        if(decoderType == null || decoderType.equalsIgnoreCase("json")) {
+            decoder = DecoderFactory.get().jsonDecoder(schema, new ByteArrayInputStream(data));
+
+        } else if(decoderType.equalsIgnoreCase("binary")) {
+            decoder = DecoderFactory.get().binaryDecoder(data, null);
+
+        } else {
+            throw new IllegalArgumentException("Cannot find avro decoder: " + decoderType);
+
+        }
+
+
+
         return datumReader.read(null, decoder);
+    }
+
+    protected static void write(GenericData.Record record, Schema schema, File avro) throws Exception {
+        DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<>(new GenericDatumWriter<>(schema));
+        FileOutputStream outputStream = new FileOutputStream(avro);
+        dataFileWriter.create(schema, outputStream);
+
+        dataFileWriter.append(record);
+        dataFileWriter.close();
+
     }
 
     protected static KafkaClientFactory kafkaClientFactory(CommandLine command) {

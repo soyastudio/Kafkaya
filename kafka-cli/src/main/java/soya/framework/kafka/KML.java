@@ -63,7 +63,6 @@ public class KML extends KafkaCommands {
     public static void main(String[] args) {
 
         KafkaAvroSerializer serializer = new KafkaAvroSerializer();
-
         try {
             CommandLine commandLine = build(args);
             if (commandLine.hasOption("b") && commandLine.getOptionValue("b") != null) {
@@ -118,7 +117,13 @@ public class KML extends KafkaCommands {
         CommandLine commandLine = build(cmd);
         Option[] opts = commandLine.getOptions();
         for (Option opt : opts) {
-            if ("s".equals(opt.getOpt())) {
+            if ("f".equals(opt.getOpt())) {
+                File file = new File(dir, opt.getValue());
+
+                String path = file.getPath();
+                path = path.replaceAll("\\\\", "/");
+                jsonObject.addProperty("f", path);
+            } else if ("s".equals(opt.getOpt())) {
                 String path = opt.getValue();
 
                 File file = new File(path);
@@ -137,7 +142,7 @@ public class KML extends KafkaCommands {
 
             } else if ("m".equals(opt.getOpt())) {
                 String msgFile = opt.getValue();
-                if(new File(msgFile).exists()) {
+                if (new File(msgFile).exists()) {
                     // do nothing:
                 } else {
                     if (!msgFile.startsWith("test/")) {
@@ -175,7 +180,7 @@ public class KML extends KafkaCommands {
                 .append("\n").append("\n");
         jsonObject.entrySet().forEach(e -> {
             String v = "";
-            if(e.getValue() != null) {
+            if (e.getValue() != null) {
                 v = e.getValue().getAsString();
             }
             builder.append("\t").append("-").append(e.getKey()).append(" ").append(v).append("\n");
