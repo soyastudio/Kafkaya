@@ -456,8 +456,6 @@ public class KafkaCommands {
         send(kafkaClientFactory(cmd).createKafkaProducer(), record, new Callback() {
             @Override
             public void onCompletion(RecordMetadata recordMetadata, Exception e) {
-
-
                 KafkaConsumer<String, byte[]> kafkaConsumer = kafkaClientFactory(cmd).createKafkaConsumer();
                 List<PartitionInfo> partitionInfoSet = kafkaConsumer.partitionsFor(obTopic);
                 Collection<TopicPartition> partitions = partitionInfoSet.stream()

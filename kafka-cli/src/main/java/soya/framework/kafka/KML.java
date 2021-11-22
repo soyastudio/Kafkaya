@@ -2,7 +2,6 @@ package soya.framework.kafka;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
@@ -62,7 +61,6 @@ public class KML extends KafkaCommands {
 
     public static void main(String[] args) {
 
-        KafkaAvroSerializer serializer = new KafkaAvroSerializer();
         try {
             CommandLine commandLine = build(args);
             if (commandLine.hasOption("b") && commandLine.getOptionValue("b") != null) {
