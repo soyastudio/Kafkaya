@@ -148,6 +148,7 @@
         <module>kafka-cli</module>
         <module>kafka-stream-java</module>
         <module>kafka-application-java</module>
+        <module>kafka-tool</module>
     </modules>
 
 </project>
